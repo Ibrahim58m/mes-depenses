@@ -36,7 +36,7 @@ class _MyAppState extends State<MyApp> {
         ),
         useMaterial3: true,
         fontFamily: 'Roboto',
-        cardTheme: CardTheme(
+        cardTheme: CardThemeData(
           elevation: 2,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
