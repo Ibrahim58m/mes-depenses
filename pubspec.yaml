@@ -1,0 +1,34 @@
+name: expense_tracker
+description: Suivi de dépenses via SMS (D-Money, CAC Bank, Waafi)
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  # Base de données locale
+  sqflite: ^2.3.0
+  path: ^1.8.3
+  # Lecture des SMS
+  telephony: ^0.2.0
+  # Permissions
+  permission_handler: ^11.0.1
+  # Graphiques
+  fl_chart: ^0.66.0
+  # Gestion d'état
+  flutter_riverpod: ^2.4.9
+  # Formatage dates
+  intl: ^0.19.0
+  # Icons
+  cupertino_icons: ^1.0.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true
