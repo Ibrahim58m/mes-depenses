@@ -13,7 +13,7 @@ dependencies:
   sqflite: ^2.3.0
   path: ^1.8.3
   # Lecture des SMS
-  telephony: ^0.2.0
+  flutter_sms_inbox: ^1.0.3
   # Permissions
   permission_handler: ^11.0.1
   # Graphiques

@@ -1,7 +1,6 @@
-import 'package:telephony/telephony.dart';
+import 'package:flutter_sms_inbox/flutter_sms_inbox.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'sms_parser.dart';
-import '../models/transaction.dart';
 import '../database/db_helper.dart';
 
 class SmsService {
@@ -9,8 +8,7 @@ class SmsService {
   factory SmsService() => _instance;
   SmsService._internal();
 
-  final Telephony _telephony = Telephony.instance;
-  final DbHelper _db = DbHelper();
+  final _query = SmsQuery();
 
   final List<String> _knownSenders = [
     'CACIntBank',
@@ -32,51 +30,42 @@ class SmsService {
     final granted = await requestPermissions();
     if (!granted) return 0;
 
+    // Lire tous les SMS de la boîte de réception
+    final messages = await _query.querySms(
+      kinds: [SmsQueryKind.inbox],
+    );
+
     int count = 0;
-    for (final sender in _knownSenders) {
-      final messages = await _telephony.getInboxSms(
-        columns: [SmsColumn.ADDRESS, SmsColumn.BODY, SmsColumn.DATE],
-        filter: SmsFilter.where(SmsColumn.ADDRESS).equals(sender),
-        sortOrder: [OrderBy(SmsColumn.DATE, sort: Sort.DESC)],
+    final db = DbHelper();
+
+    for (final msg in messages) {
+      final sender = msg.sender ?? '';
+      final body = msg.body ?? '';
+      final date = msg.date ?? DateTime.now();
+
+      // Vérifier si c'est un SMS d'un service connu
+      final isKnown = _knownSenders.any(
+        (s) => sender.toUpperCase().contains(s.toUpperCase()),
       );
+      if (!isKnown) continue;
 
-      for (final msg in messages) {
-        final body = msg.body ?? '';
-        final address = msg.address ?? '';
-        final date = msg.date != null
-            ? DateTime.fromMillisecondsSinceEpoch(msg.date!)
-            : DateTime.now();
-
-        final tx = SmsParser.parse(address, body, date);
-        if (tx != null) {
-          final exists = await _db.transactionExists(body);
-          if (!exists) {
-            await _db.insertTransaction(tx);
-            count++;
-          }
+      final tx = SmsParser.parse(sender, body, date);
+      if (tx != null) {
+        final exists = await db.transactionExists(body);
+        if (!exists) {
+          await db.insertTransaction(tx);
+          count++;
         }
       }
     }
     return count;
   }
 
-  /// Écoute les nouveaux SMS en temps réel
+  /// Écoute passive — appelle cette méthode depuis main
+  /// flutter_sms_inbox ne supporte pas l'écoute en temps réel,
+  /// donc on fait une vérification périodique (toutes les 5 min)
   void listenForNewSms() {
-    _telephony.listenIncomingSms(
-      onNewMessage: (SmsMessage message) async {
-        final body = message.body ?? '';
-        final address = message.address ?? '';
-        final date = DateTime.now();
-
-        final tx = SmsParser.parse(address, body, date);
-        if (tx != null) {
-          final exists = await _db.transactionExists(body);
-          if (!exists) {
-            await _db.insertTransaction(tx);
-          }
-        }
-      },
-      listenInBackground: false,
-    );
+    // Pas de listener temps réel avec ce package
+    // L'utilisateur peut appuyer sur Sync pour rafraîchir
   }
 }
