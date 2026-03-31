@@ -131,12 +131,15 @@ class DbHelper {
 
   Future<double> getTotalExpenses({DateTime? from, DateTime? to}) async {
     final transactions = await getAllTransactions(from: from, to: to);
-    return transactions
-        .where((t) =>
-            t.type == TransactionType.debit ||
-            t.type == TransactionType.transfer ||
-            t.type == TransactionType.phoneCredit)
-        .fold(0.0, (sum, t) => sum + t.amount);
+    double total = 0.0;
+    for (final t in transactions) {
+      if (t.type == TransactionType.debit ||
+          t.type == TransactionType.transfer ||
+          t.type == TransactionType.phoneCredit) {
+        total += t.amount;
+      }
+    }
+    return total;
   }
 
   /// Dépenses par catégorie sur une période
